@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}E-Saving{% endblock %}</title>
+    {% block css %}{% endblock %}
+</head>
+<body>
+    <aside id="sidebar">
+        <h1><a href="[quem-somos-url]"><img src="[logo.png]" alt="Logo"></a></h1>
+        <nav id="navbar">
+            <ul id="navlist">
+                <li class="navitem"><a class="navlink">Pontos de Coleta</a></li>
+                <li class="navitem"><a class="navlink">Quem Somos</a></li>
+                {% if logged %}
+                <li class="navitem"><a class="navlink">Área do Parceiro</a></li>
+                {% else %}
+                <li class="navitem"><a class="navlink">Torne-se Parceiro</a></li>
+                {% endif %}
+                <li class="navitem"><a class="navlink">Contato</a></li>
+            </ul>
+        </nav>
+
+        <div id="user-container">
+            {% if logged %}
+            <div id="userinf">
+                <img class="userimg" src="[tmp_user_img]" alt="Foto do usuário">
+                <em class="username">[username]</em>
+                <a href="[userconfig-url]"><img src="[config.png]" alt="Ícone de configuração"></a>
+            </div>
+            {% else %}
+            <div id="login-singup">
+                <a href="[login-url]">Login</a>
+                <a href="[singup-url]">Cadastre-se</a>
+            </div>
+            {% endif %}
+        </div>
+    </aside>
+    {% block main %}
+    {% endblock %}
+</body>
+</html>
