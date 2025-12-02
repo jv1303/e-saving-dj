@@ -1,28 +1,34 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from pymongo import MongoClient
-from bson.objectid import ObjectId # <--- Adicione esta importação
+from bson.objectid import ObjectId
 
-# --- Configuração do MongoDB ---
-# (Baseado no seu arquivo prototype_crud.py)
+# --- 1. Configuração do MongoDB ---
+# (String de conexão retirada do seu script prototype_crud.py)
 try:
     client = MongoClient("mongodb+srv://e-user:bMJFcaInfgqDhXU4qt@e-cluster.cddvcah.mongodb.net/")
     db = client.get_database("e-saving")
     user_collection = db.get_collection("user")
+    partner_collection = db.get_collection("partner")
+    collection_point_collection = db.get_collection("collection_point")
     print("✅ Conexão com MongoDB estabelecida!")
 except Exception as e:
     print(f"❌ Erro ao conectar ao MongoDB: {e}")
 
-# --- Views ---
+# --- 2. Views Comuns ---
 
 def home(request):
     return render(request, 'home.html')
 
+def pontos_coleta(request):
+    # Renderiza a página do mapa (A lógica de carregamento do mapa está no front-end)
+    return render(request, 'pontos_coleta.html')
+
+# --- 3. Views de Cliente (User) ---
+
 def register_user(request):
     if request.method == 'POST':
         try:
-            # 1. Capturar dados do formulário HTML
-            # Os nomes aqui (ex: 'name', 'cpf') devem bater com o 'name="..."' do input no HTML
             name = request.POST.get('name')
             cpf = request.POST.get('cpf')
             phone = request.POST.get('phone')
@@ -30,45 +36,87 @@ def register_user(request):
             zip_code = request.POST.get('zip_code')
             password_raw = request.POST.get('password')
 
-            # 2. Validações Básicas
-            # No seu protótipo, a senha era tratada como INT
+            # Validação: Senha deve ser numérica (seguindo o protótipo original)
             try:
                 password = int(password_raw)
             except ValueError:
                 messages.error(request, "A senha deve conter apenas números.")
                 return render(request, 'register.html')
 
-            # Verifica se o e-mail já existe
+            # Validação: Checar se o email já existe
             if user_collection.find_one({"email": email}):
                 messages.warning(request, "Este e-mail já está cadastrado.")
                 return render(request, 'register.html')
 
-            # 3. Preparar o objeto para salvar (igual ao prototype_crud.py)
             user_data = {
                 "name": name,
-                "profile_picture": "", # Campo não existe no form ainda, enviando vazio
+                "profile_picture": "",
                 "email": email,
                 "password": password,
                 "phone": phone,
                 "zip_code": zip_code,
-                "cpf": cpf
+                "cpf": cpf,
+                "points": 0,
+                "discarded_items": 0
             }
 
-            # 4. Inserir no Banco
             user_collection.insert_one(user_data)
             
-            # 5. Sucesso!
             messages.success(request, f"Bem-vindo(a), {name}! Cadastro realizado com sucesso.")
-            return redirect('home')
+            return redirect('login_user')
 
         except Exception as e:
             messages.error(request, f"Ocorreu um erro no sistema: {e}")
             return render(request, 'register.html')
 
-    # Se for GET (apenas abrir a página), mostra o formulário vazio
     return render(request, 'register.html')
 
-# ... (imports existentes)
+def partner_area(request):
+    if 'partner_id' not in request.session:
+        messages.warning(request, "Acesso negado. Faça login como Parceiro.")
+        return redirect('login_partner')
+    
+    partner_id = request.session['partner_id']
+    
+    try:
+        # Busca dados atualizados no Mongo
+        partner = partner_collection.find_one({"_id": ObjectId(partner_id)})
+        
+        if not partner:
+            request.session.flush()
+            messages.error(request, "Sessão inválida. Parceiro não encontrado.")
+            return redirect('home')
+
+        return render(request, 'partner_area.html', {'partner': partner})
+    except Exception as e:
+        messages.error(request, f"Erro ao carregar perfil do parceiro: {e}")
+        return redirect('home')
+
+def update_partner(request):
+    if request.method == 'POST' and 'partner_id' in request.session:
+        partner_id = request.session['partner_id']
+        
+        try:
+            # Captura dados (Conforme o form do partner_area.html)
+            updated_data = {
+                "NomeParceiro": request.POST.get('NomeParceiro'),
+                "EmailParceiro": request.POST.get('EmailParceiro'),
+                # Incluir todos os outros campos editáveis aqui...
+            }
+            
+            # Atualiza no Mongo
+            partner_collection.update_one(
+                {"_id": ObjectId(partner_id)},
+                {"$set": updated_data}
+            )
+            
+            request.session['partner_name'] = updated_data['NomeParceiro']
+            
+            messages.success(request, "Dados do Parceiro atualizados com sucesso!")
+        except Exception as e:
+            messages.error(request, f"Erro ao atualizar dados do Parceiro: {e}")
+            
+    return redirect('partner_area')
 
 def login_user(request):
     if request.method == 'POST':
@@ -76,18 +124,15 @@ def login_user(request):
         password_input = request.POST.get('password')
 
         try:
-            # Converter senha para int para bater com o formato do banco
             password = int(password_input)
         except ValueError:
-            messages.error(request, "A senha deve conter apenas números.")
+            messages.error(request, "Senha inválida (deve ser numérica).")
             return render(request, 'login.html')
 
-        # Procura usuário com esse email e senha
         user = user_collection.find_one({"email": email, "password": password})
 
         if user:
-            # SUCESSO: Salva os dados na sessão do navegador
-            # Convertemos o ID para string pois o Django não guarda ObjectId nativamente
+            # Salva ID e Nome na sessão para manter o login
             request.session['user_id'] = str(user['_id'])
             request.session['user_name'] = user['name']
             
@@ -98,21 +143,52 @@ def login_user(request):
 
     return render(request, 'login.html')
 
+def login_partner(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        password_input = request.POST.get('password')
+
+        try:
+            password = int(password_input)
+        except ValueError:
+            messages.error(request, "Senha inválida (deve ser numérica).")
+            return render(request, 'partner_login.html')
+
+        # Busca na coleção de parceiros
+        partner = partner_collection.find_one({"EmailParceiro": email, "SenhaParceiro": password})
+
+        if partner:
+            # Salva o tipo de usuário e o nome na sessão
+            request.session['partner_id'] = str(partner['_id'])
+            request.session['partner_name'] = partner['NomeParceiro']
+            
+            messages.success(request, f"Bem-vindo(a) Parceiro, {partner['NomeParceiro']}!")
+            return redirect('partner_area') # Redireciona para a nova área de parceiro
+        else:
+            messages.error(request, "E-mail ou senha incorretos para Parceiro.")
+
+    return render(request, 'partner_login.html')
+
 def logout_user(request):
-    # Limpa a sessão (desloga o usuário)
     request.session.flush()
+    messages.info(request, "Você saiu da sua conta.")
     return redirect('home')
 
 def user_area(request):
-    # Verifica se usuário está logado
     if 'user_id' not in request.session:
+        messages.warning(request, "Acesso negado. Faça login para ver seu perfil.")
         return redirect('login_user')
     
     user_id = request.session['user_id']
     
     try:
-        # Busca dados atualizados no Mongo
         user = user_collection.find_one({"_id": ObjectId(user_id)})
+        
+        if not user:
+            request.session.flush()
+            messages.error(request, "Sessão inválida. Usuário não encontrado.")
+            return redirect('home')
+
         return render(request, 'user_area.html', {'user': user})
     except Exception as e:
         messages.error(request, f"Erro ao carregar perfil: {e}")
@@ -123,7 +199,6 @@ def update_user(request):
         user_id = request.session['user_id']
         
         try:
-            # Captura dados
             updated_data = {
                 "name": request.POST.get('name'),
                 "email": request.POST.get('email'),
@@ -133,13 +208,11 @@ def update_user(request):
                 "password": int(request.POST.get('password'))
             }
             
-            # Atualiza no Mongo
             user_collection.update_one(
                 {"_id": ObjectId(user_id)},
                 {"$set": updated_data}
             )
             
-            # Atualiza nome na sessão caso tenha mudado
             request.session['user_name'] = updated_data['name']
             
             messages.success(request, "Dados atualizados com sucesso!")
@@ -155,10 +228,8 @@ def delete_user(request):
         user_id = request.session['user_id']
         
         try:
-            # Remove do banco
             user_collection.delete_one({"_id": ObjectId(user_id)})
             
-            # Limpa sessão (Logout)
             request.session.flush()
             messages.success(request, "Sua conta foi excluída com sucesso.")
         except Exception as e:
@@ -166,3 +237,110 @@ def delete_user(request):
             return redirect('user_area')
             
     return redirect('home')
+
+
+# --- 4. Views de Parceiro (Partner) ---
+
+def partner_register(request):
+    if request.method == 'POST':
+        try:
+            # 1. Capturar dados (Conforme Parceiro.cs)
+            data = {
+                "NomeParceiro": request.POST.get('NomeParceiro'),
+                "CpfParceiro": request.POST.get('CpfParceiro'),
+                "EmailParceiro": request.POST.get('EmailParceiro'),
+                "CepParceiro": request.POST.get('CepParceiro'),
+                "LogradouroParceiro": request.POST.get('LogradouroParceiro'),
+                "ComplementoParceiro": request.POST.get('ComplementoParceiro'),
+                "SenhaParceiro": int(request.POST.get('SenhaParceiro')),
+                "PontosParceiro": 0,
+                "FotoPerfilParceiro": ""
+            }
+            
+            # 2. Inserção no Mongo (coleção 'partner')
+            partner_collection.insert_one(data)
+            
+            messages.success(request, f"Parceiro {data['NomeParceiro']} registado com sucesso! Faça login para começar.")
+            return redirect('home')
+
+        except ValueError:
+            messages.error(request, "A senha deve conter apenas números.")
+        except Exception as e:
+            messages.error(request, f"Ocorreu um erro: {e}")
+            
+    return render(request, 'partner_register.html')
+
+# ... (após todas as views existentes, como update_partner)
+
+# --- 5. Views de Ponto de Coleta (PontoColeta) ---
+
+def manage_collection_points(request):
+    if 'partner_id' not in request.session:
+        messages.warning(request, "Acesso negado. Faça login como Parceiro.")
+        return redirect('login_partner')
+
+    partner_id = request.session['partner_id']
+    
+    try:
+        # Busca todos os pontos de coleta que pertencem a este Parceiro.
+        # No seu modelo PontoColeta.cs, a chave para o Parceiro é CpfParceiro.
+        # Precisamos encontrar o CPF do parceiro logado primeiro para filtrar.
+        
+        partner_obj = partner_collection.find_one({"_id": ObjectId(partner_id)})
+        
+        if not partner_obj or 'CpfParceiro' not in partner_obj:
+            messages.error(request, "Dados do Parceiro incompletos.")
+            return redirect('partner_area')
+            
+        partner_cpf = partner_obj['CpfParceiro']
+
+        points_list = list(collection_point_collection.find({"CpfParceiro": partner_cpf}))
+
+        context = {
+            'points': points_list,
+            'partner_cpf': partner_cpf # Passamos para o template de criação
+        }
+        return render(request, 'partner_collection_points.html', context)
+    
+    except Exception as e:
+        messages.error(request, f"Erro ao carregar gestão de pontos: {e}")
+        return redirect('partner_area')
+
+
+def create_collection_point(request):
+    if 'partner_id' not in request.session:
+        messages.warning(request, "Acesso negado.")
+        return redirect('login_partner')
+
+    if request.method == 'POST':
+        try:
+            # 1. Obter CPF do Parceiro (chave estrangeira)
+            partner_obj = partner_collection.find_one({"_id": ObjectId(request.session['partner_id'])})
+            partner_cpf = partner_obj.get('CpfParceiro')
+
+            # 2. Capturar dados do formulário (Baseado no PontoColeta.cs)
+            data = {
+                "CnpjParceiro": request.POST.get('CnpjParceiro'),
+                "ItensColetados": 0, # Inicia com 0
+                "Pontuacao": 0,      # Inicia com 0
+                "CpfParceiro": partner_cpf, # Chave Estrangeira
+                
+                # Campos extras necessários (como endereço, que devem vir do form)
+                "EnderecoPonto": request.POST.get('EnderecoPonto'),
+                "HorarioAbertura": request.POST.get('HorarioAbertura'),
+                "CapacidadeKg": int(request.POST.get('CapacidadeKg')) # Assumindo campo numérico
+            }
+
+            # 3. Inserir no Mongo (coleção 'collection_point')
+            collection_point_collection.insert_one(data)
+            
+            messages.success(request, "Ponto de Coleta criado com sucesso!")
+            return redirect('manage_collection_points')
+
+        except ValueError:
+            messages.error(request, "O campo de Capacidade deve ser um número inteiro.")
+        except Exception as e:
+            messages.error(request, f"Erro ao criar ponto de coleta: {e}")
+
+    # Retorna para a página de gestão se o POST falhar
+    return redirect('manage_collection_points')

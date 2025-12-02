@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gestão de Pontos - Parceiro{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="section-subtitle-bold text-center">Gestão de Pontos de Coleta</h2>
+    <p class="text-center">Parceiro: {{ request.session.partner_name }}</p>
+
+    <div class="text-center mb-4">
+        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createPointModal">
+            + Adicionar Novo Ponto de Coleta
+        </button>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-header bg-info text-white">
+            Pontos Registrados (Total: {{ points|length }})
+        </div>
+        <div class="card-body p-0">
+            {% if points %}
+            <table class="table table-striped table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Endereço</th>
+                        <th>Capacidade (Kg)</th>
+                        <th>Itens Coletados</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for point in points %}
+                    <tr>
+                        <td>{{ point._id }}</td>
+                        <td>{{ point.EnderecoPonto }}</td>
+                        <td>{{ point.CapacidadeKg }}</td>
+                        <td>{{ point.ItensColetados }}</td>
+                        <td>
+                            <a href="#" class="btn btn-sm btn-primary">Detalhes/Editar</a>
+                            <a href="#" class="btn btn-sm btn-danger">Excluir</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="p-3 text-center">Você ainda não tem Pontos de Coleta registrados.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="createPointModal" tabindex="-1" aria-labelledby="createPointModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'create_collection_point' %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createPointModalLabel">Novo Ponto de Coleta</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Endereço Completo</label>
+                        <input type="text" name="EnderecoPonto" class="form-control" placeholder="Rua, Número, Bairro" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">CNPJ do Ponto (Se aplicável)</label>
+                        <input type="text" name="CnpjParceiro" class="form-control" placeholder="Opcional: se o ponto tiver CNPJ diferente">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Horário de Funcionamento</label>
+                        <input type="text" name="HorarioAbertura" class="form-control" placeholder="Ex: 08:00 - 18:00" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Capacidade Máxima (Kg)</label>
+                        <input type="number" name="CapacidadeKg" class="form-control" required>
+                    </div>
+                    
+                    </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success">Salvar Ponto</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
