@@ -1,6 +1,41 @@
-{% extends "base.html" %}
-{% block title %} Página Inicial {% endblock %}
-{% block css %}{% endblock %}
-{% block main %}
-<div id="map">mapa</div>
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Página Inicial - e-Saving{% endblock %}
+
+{% block styles %}
+    <link rel="stylesheet" href="{% static 'esaving/css/index.css' %}" />
+{% endblock %}
+
+{% block content %}
+<div class="text-center">
+    <h1 class="display-4">Bem-vindo ao e-Saving</h1>
+    <p>O futuro da reciclagem de eletrônicos começa aqui.</p>
+    
+    <div class="mt-4">
+        <img src="{% static 'esaving/images/hpImage.png' %}" class="img-fluid" alt="Imagem Home">
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-md-4">
+            <img src="{% static 'esaving/images/pilha.png' %}" alt="Descarte" width="60">
+            <h3>Descarte Consciente</h3>
+            <p>Encontre pontos de coleta próximos a você.</p>
+        </div>
+        <div class="col-md-4">
+            <img src="{% static 'esaving/images/coroa.png' %}" alt="Pontos" width="60">
+            <h3>Ganhe Pontos</h3>
+            <p>Troque seus resíduos por benefícios.</p>
+        </div>
+        <div class="col-md-4">
+            <img src="{% static 'esaving/images/parceria.png' %}" alt="Parcerias" width="60">
+            <h3>Seja Parceiro</h3>
+            <p>Junte-se a nós nessa missão sustentável.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{% static 'esaving/js/indexFooter.js' %}"></script>
 {% endblock %}
