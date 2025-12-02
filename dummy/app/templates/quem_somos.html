@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Quem Somos - e-Saving{% endblock %}
+
+{% block content %}
+<div class="grid">
+    <h2 class="section-subtitle-bold">Quem Somos</h2>
+    <section class="content-section">
+        <h2 class="section-subtitle-light">Nossa Missão</h2>
+        <p class="section-paragraph">
+            A e-Saving nasceu com o objetivo de simplificar e incentivar a reciclagem de lixo eletrônico,
+            transformando o descarte consciente em benefícios reais para o usuário e o meio ambiente.
+        </p>
+        <p class="section-paragraph">
+            Acreditamos que a tecnologia deve ser parte da solução, conectando cidadãos, pontos de coleta e
+            recicladoras de forma transparente e eficiente.
+        </p>
+        
+        <div class="text-center">
+            <img src="{% static 'esaving/images/quemSomos.png' %}" alt="Nossa missão" style="max-width: 80%; height: auto;">
+        </div>
+
+    </section>
+</div>
+{% endblock %}

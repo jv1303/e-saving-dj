@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Cadastro de Parceiro - e-Saving{% endblock %}
+
+{% block styles %}
+    <link rel="stylesheet" href="{% static 'esaving/css/layout2.css' %}" />
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark">
+                    <h3 class="mb-0">Registar-se como Parceiro</h3>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="post" action="{% url 'partner_register' %}">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Nome da Empresa</label>
+                            <input type="text" name="NomeParceiro" class="form-control" required>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">CPF/CNPJ do Parceiro (Chave)</label>
+                                <input type="text" name="CpfParceiro" id="CpfParceiro" class="form-control" placeholder="00.000.000/0000-00" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">E-mail</label>
+                                <input type="email" name="EmailParceiro" class="form-control" required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">CEP</label>
+                                <input type="text" name="CepParceiro" id="CepParceiro" class="form-control" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Senha (Numérica)</label>
+                                <input type="password" name="SenhaParceiro" class="form-control" placeholder="Apenas números" required>
+                            </div>
+                        </div>
+                        
+                         <div class="mb-3">
+                            <label class="form-label">Logradouro</label>
+                            <input type="text" name="LogradouroParceiro" class="form-control" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Complemento (Opcional)</label>
+                            <input type="text" name="ComplementoParceiro" class="form-control">
+                        </div>
+
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-warning btn-lg">Registar Parceiro</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{% static 'esaving/js/cnpj.js' %}"></script>
+    <script src="{% static 'esaving/js/cepApi.js' %}"></script>
+{% endblock %}

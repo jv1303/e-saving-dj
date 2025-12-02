@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Área do Parceiro - e-Saving{% endblock %}
+
+{% block styles %}
+    <link rel="stylesheet" href="{% static 'esaving/css/layout2.css' %}" />
+    <style>
+        .grid { display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .widelist { list-style: none; padding: 0; display: flex; gap: 50px; justify-content: center; }
+        .widelist-item { display: flex; align-items: center; gap: 15px; }
+        .widelist-img { width: 60px; }
+        .content-section { background: white; padding: 30px; border-radius: 20px; width: 100%; max-width: 800px; margin-bottom: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .section-subtitle-bold { color: #77B255; text-align: center; margin-bottom: 20px; }
+        .edit-button { cursor: pointer; float: right; }
+        .edit-button img { width: 30px; }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="grid">
+    <h2 class="section-subtitle-bold">Olá, Parceiro {{ partner.NomeParceiro }}</h2>
+
+    <section class="content-section">
+        <h2 class="section-subtitle-bold">Resumo da Empresa</h2>
+        <ul class="widelist">
+            <li class="widelist-item">
+                <img src="{% static 'esaving/images/coroa.png' %}" alt="Pontos" class="widelist-img">
+                <div class="widelist-text-container">
+                    <h4 class="widelist-small">Pontos de Parceiro</h4>
+                    <h3 class="widelist-label">{{ partner.PontosParceiro|default:"0" }}</h3>
+                </div>
+            </li>
+            <li class="widelist-item">
+                <img src="{% static 'esaving/images/organizacao.png' %}" alt="Coletas" class="widelist-img">
+                <div class="widelist-text-container">
+                    <h4 class="widelist-small">Pontos de Coleta Ativos</h4>
+                    <h3 class="widelist-label">0</h3> 
+                </div>
+            </li>
+        </ul>
+        <div class="text-center mt-4">
+             <a href="#" class="btn btn-success btn-lg">Gerir Pontos de Coleta</a>
+        </div>
+    </section>
+
+    <div class="text-center mt-4">
+        <a href="{% url 'manage_collection_points' %}" class="btn btn-success btn-lg mb-2">Gerir Pontos de Coleta</a>
+        <a href="{% url 'register_item' %}" class="btn btn-secondary btn-lg mb-2">Registar Novo Item</a>
+        <a href="{% url 'item_inventory' %}" class="btn btn-info text-white btn-lg mb-2">Ver Inventário</a>
+    </div>
+
+    <section class="content-section">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="section-subtitle-bold mb-0">Informações de Cadastro</h2>
+            <div class="edit-button" onclick="editToggle()">
+                <img src="{% static 'esaving/images/editar.png' %}" alt="Editar">
+            </div>
+        </div>
+    <form method="post" action="{% url 'update_partner' %}" class="generic-form">
+        {% csrf_token %}
+        
+        <div class="row w-100">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Nome da Empresa</label>
+                <input class="form-control form-input" type="text" name="NomeParceiro" value="{{ partner.NomeParceiro }}" disabled required>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Email</label>
+                <input class="form-control form-input" type="email" name="EmailParceiro" value="{{ partner.EmailParceiro }}" disabled required>
+            </div>
+        </div>
+
+        <div class="row w-100">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">CPF/CNPJ (Chave)</label>
+                <input class="form-control form-input" type="text" name="CpfParceiro" value="{{ partner.CpfParceiro }}" disabled required>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Senha (Numérica)</label>
+                <input class="form-control form-input" type="text" name="SenhaParceiro" value="{{ partner.SenhaParceiro }}" disabled required>
+            </div>
+        </div>
+
+        <div class="row w-100">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">CEP</label>
+                <input class="form-control form-input" type="text" name="CepParceiro" value="{{ partner.CepParceiro }}" disabled required>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Logradouro</label>
+                <input class="form-control form-input" type="text" name="LogradouroParceiro" value="{{ partner.LogradouroParceiro }}" disabled>
+            </div>
+        </div>
+
+        <div class="row w-100">
+            <div class="col-md-12 mb-3">
+                <label class="form-label">Complemento</label>
+                <input class="form-control form-input" type="text" name="ComplementoParceiro" value="{{ partner.ComplementoParceiro }}" disabled>
+            </div>
+        </div>
+        
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-success btn-lg form-submit" style="display: none;">Confirmar Alterações</button>
+        </div>
+    </form>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{% static 'esaving/js/enableForm.js' %}"></script>
+    <script>
+        function editToggle() {
+            const inputs = document.querySelectorAll('.form-input');
+            const submitBtn = document.querySelector('.form-submit');
+            
+            inputs.forEach(input => {
+                // Excluir CPF/CNPJ de edição (chave primária)
+                if (input.name !== 'CpfParceiro') {
+                    input.disabled = !input.disabled;
+                }
+            });
+            
+            if (submitBtn.style.display === 'none') {
+                submitBtn.style.display = 'inline-block';
+            } else {
+                submitBtn.style.display = 'none';
+            }
+        }
+    </script>
+{% endblock %}
