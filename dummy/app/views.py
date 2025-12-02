@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from pymongo import MongoClient
 from bson.objectid import ObjectId
+import datetime
 
 # --- 1. Configuração do MongoDB ---
 # (String de conexão retirada do seu script prototype_crud.py)
@@ -11,6 +12,7 @@ try:
     user_collection = db.get_collection("user")
     partner_collection = db.get_collection("partner")
     collection_point_collection = db.get_collection("collection_point")
+    item_collection = db.get_collection("item") # <--- NOVO
     print("✅ Conexão com MongoDB estabelecida!")
 except Exception as e:
     print(f"❌ Erro ao conectar ao MongoDB: {e}")
@@ -344,3 +346,108 @@ def create_collection_point(request):
 
     # Retorna para a página de gestão se o POST falhar
     return redirect('manage_collection_points')
+
+def update_collection_point(request, point_id):
+    if request.method == 'POST' and 'partner_id' in request.session:
+        try:
+            # 1. Fetch data
+            updated_data = {
+                "CnpjParceiro": request.POST.get('CnpjParceiro'),
+                "EnderecoPonto": request.POST.get('EnderecoPonto'),
+                "HorarioAbertura": request.POST.get('HorarioAbertura'),
+                # Garantindo que campos numéricos sejam tratados como int
+                "CapacidadeKg": int(request.POST.get('CapacidadeKg')),
+                "Pontuacao": int(request.POST.get('Pontuacao', 0)), 
+                "ItensColetados": int(request.POST.get('ItensColetados', 0)),
+            }
+            
+            # 2. Update in Mongo
+            collection_point_collection.update_one(
+                {"_id": ObjectId(point_id)},
+                {"$set": updated_data}
+            )
+            
+            messages.success(request, "Ponto de Coleta atualizado com sucesso!")
+
+        except ValueError:
+            messages.error(request, "Capacidade, Pontuação e Itens Coletados devem ser números inteiros.")
+        except Exception as e:
+            messages.error(request, f"Erro ao atualizar ponto de coleta: {e}")
+            
+    return redirect('manage_collection_points')
+
+
+def delete_collection_point(request, point_id):
+    if request.method == 'POST' and 'partner_id' in request.session:
+        try:
+            # 1. Delete from Mongo
+            result = collection_point_collection.delete_one({"_id": ObjectId(point_id)})
+            
+            if result.deleted_count == 1:
+                messages.success(request, "Ponto de Coleta excluído com sucesso.")
+            else:
+                messages.warning(request, "Ponto de Coleta não encontrado.")
+                
+        except Exception as e:
+            messages.error(request, f"Erro ao excluir ponto de coleta: {e}")
+            
+    return redirect('manage_collection_points')
+
+# --- 6. Views de Item (Inventário) ---
+
+def register_item(request):
+    if 'partner_id' not in request.session:
+        messages.warning(request, "Acesso negado.")
+        return redirect('login_partner')
+
+    # A página pode ser acessada via GET (para mostrar o formulário)
+    # ou via POST (para salvar o item)
+
+    # 1. Buscar Pontos de Coleta do Parceiro para usar no formulário
+    partner_obj = partner_collection.find_one({"_id": ObjectId(request.session['partner_id'])})
+    partner_cpf = partner_obj.get('CpfParceiro')
+    
+    # Lista de Pontos de Coleta do Parceiro
+    available_points = list(collection_point_collection.find({"CpfParceiro": partner_cpf}))
+
+    if request.method == 'POST':
+        try:
+            # Capturar ID do Ponto de Coleta
+            id_ponto_coleta = request.POST.get('IdPontoColeta')
+            
+            # Validação básica
+            if not id_ponto_coleta:
+                messages.error(request, "Selecione um Ponto de Coleta válido.")
+                return redirect('register_item')
+
+            # 2. Capturar dados do Item (Baseado no Item.cs)
+            data_item = {
+                "Valor": float(request.POST.get('Valor')), # Valor monetário
+                "ModeloItem": request.POST.get('ModeloItem'),
+                "Tipo": request.POST.get('Tipo'),
+                "IdPontoColeta": ObjectId(id_ponto_coleta), # Referência ao Ponto de Coleta
+                "IdEstoque": None, # Fica nulo até ser vendido/movimentado
+                "DataRegistro": datetime.now() # Adicionando data para controle
+            }
+            
+            # 3. Inserir Item no Mongo
+            item_collection.insert_one(data_item)
+            
+            # 4. (OPCIONAL) Atualizar contador de itens no Ponto de Coleta
+            collection_point_collection.update_one(
+                 {"_id": ObjectId(id_ponto_coleta)},
+                 {"$inc": {"ItensColetados": 1}} # Incrementa o contador em 1
+            )
+            
+            messages.success(request, f"Item '{data_item['ModeloItem']}' registado com sucesso no Ponto de Coleta.")
+            return redirect('register_item')
+
+        except ValueError:
+            messages.error(request, "O Valor deve ser um número válido.")
+        except Exception as e:
+            messages.error(request, f"Erro ao registar item: {e}")
+            
+    context = {
+        'points': available_points
+    }
+    return render(request, 'item_register.html', context)

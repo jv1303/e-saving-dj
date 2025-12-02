@@ -44,6 +44,11 @@
         </div>
     </section>
 
+    <div class="text-center mt-4">
+        <a href="{% url 'manage_collection_points' %}" class="btn btn-success btn-lg mb-2">Gerir Pontos de Coleta</a>
+        <a href="{% url 'register_item' %}" class="btn btn-secondary btn-lg mb-2">Registar Novo Item</a>
+    </div>
+
     <section class="content-section">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h2 class="section-subtitle-bold mb-0">Informações de Cadastro</h2>
@@ -51,24 +56,53 @@
                 <img src="{% static 'esaving/images/editar.png' %}" alt="Editar">
             </div>
         </div>
+    <form method="post" action="{% url 'update_partner' %}" class="generic-form">
+        {% csrf_token %}
+        
+        <div class="row w-100">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Nome da Empresa</label>
+                <input class="form-control form-input" type="text" name="NomeParceiro" value="{{ partner.NomeParceiro }}" disabled required>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Email</label>
+                <input class="form-control form-input" type="email" name="EmailParceiro" value="{{ partner.EmailParceiro }}" disabled required>
+            </div>
+        </div>
 
-        <form method="post" action="{% url 'update_partner' %}" class="generic-form">
-            {% csrf_token %}
-            
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Nome da Empresa</label>
-                    <input class="form-control form-input" type="text" name="NomeParceiro" value="{{ partner.NomeParceiro }}" disabled required>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Email</label>
-                    <input class="form-control form-input" type="email" name="EmailParceiro" value="{{ partner.EmailParceiro }}" disabled required>
-                </div>
+        <div class="row w-100">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">CPF/CNPJ (Chave)</label>
+                <input class="form-control form-input" type="text" name="CpfParceiro" value="{{ partner.CpfParceiro }}" disabled required>
             </div>
-            <div class="text-center mt-4">
-                <button type="submit" class="btn btn-success btn-lg form-submit" style="display: none;">Confirmar Alterações</button>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Senha (Numérica)</label>
+                <input class="form-control form-input" type="text" name="SenhaParceiro" value="{{ partner.SenhaParceiro }}" disabled required>
             </div>
-        </form>
+        </div>
+
+        <div class="row w-100">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">CEP</label>
+                <input class="form-control form-input" type="text" name="CepParceiro" value="{{ partner.CepParceiro }}" disabled required>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Logradouro</label>
+                <input class="form-control form-input" type="text" name="LogradouroParceiro" value="{{ partner.LogradouroParceiro }}" disabled>
+            </div>
+        </div>
+
+        <div class="row w-100">
+            <div class="col-md-12 mb-3">
+                <label class="form-label">Complemento</label>
+                <input class="form-control form-input" type="text" name="ComplementoParceiro" value="{{ partner.ComplementoParceiro }}" disabled>
+            </div>
+        </div>
+        
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-success btn-lg form-submit" style="display: none;">Confirmar Alterações</button>
+        </div>
+    </form>
     </section>
 </div>
 {% endblock %}

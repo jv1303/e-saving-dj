@@ -8,6 +8,15 @@
     <h2 class="section-subtitle-bold text-center">Gestão de Pontos de Coleta</h2>
     <p class="text-center">Parceiro: {{ request.session.partner_name }}</p>
 
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
     <div class="text-center mb-4">
         <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createPointModal">
             + Adicionar Novo Ponto de Coleta
@@ -23,10 +32,11 @@
             <table class="table table-striped table-hover mb-0">
                 <thead>
                     <tr>
-                        <th>ID</th>
+                        <th>ID (Mongo)</th>
                         <th>Endereço</th>
                         <th>Capacidade (Kg)</th>
                         <th>Itens Coletados</th>
+                        <th>Pontuação</th>
                         <th>Ações</th>
                     </tr>
                 </thead>
@@ -37,9 +47,16 @@
                         <td>{{ point.EnderecoPonto }}</td>
                         <td>{{ point.CapacidadeKg }}</td>
                         <td>{{ point.ItensColetados }}</td>
+                        <td>{{ point.Pontuacao }}</td>
                         <td>
-                            <a href="#" class="btn btn-sm btn-primary">Detalhes/Editar</a>
-                            <a href="#" class="btn btn-sm btn-danger">Excluir</a>
+                            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#editPointModal-{{ point._id }}">
+                                Editar
+                            </button>
+                            
+                            <form action="{% url 'delete_collection_point' point_id=point._id %}" method="post" class="d-inline" onsubmit="return confirm('Tem certeza que deseja excluir este ponto?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-danger">Excluir</button>
+                            </form>
                         </td>
                     </tr>
                     {% endfor %}
@@ -51,6 +68,7 @@
         </div>
     </div>
 </div>
+
 
 <div class="modal fade" id="createPointModal" tabindex="-1" aria-labelledby="createPointModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -78,8 +96,7 @@
                         <label class="form-label">Capacidade Máxima (Kg)</label>
                         <input type="number" name="CapacidadeKg" class="form-control" required>
                     </div>
-                    
-                    </div>
+                </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-success">Salvar Ponto</button>
@@ -88,4 +105,56 @@
         </div>
     </div>
 </div>
+
+
+{% for point in points %}
+<div class="modal fade" id="editPointModal-{{ point._id }}" tabindex="-1" aria-labelledby="editPointModalLabel-{{ point._id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'update_collection_point' point_id=point._id %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editPointModalLabel-{{ point._id }}">Editar Ponto #{{ point._id }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Endereço Completo</label>
+                        <input type="text" name="EnderecoPonto" class="form-control" value="{{ point.EnderecoPonto }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">CNPJ do Ponto</label>
+                        <input type="text" name="CnpjParceiro" class="form-control" value="{{ point.CnpjParceiro }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Horário de Funcionamento</label>
+                        <input type="text" name="HorarioAbertura" class="form-control" value="{{ point.HorarioAbertura }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Capacidade Máxima (Kg)</label>
+                        <input type="number" name="CapacidadeKg" class="form-control" value="{{ point.CapacidadeKg }}" required>
+                    </div>
+                    
+                    <hr>
+                    <div class="mb-3">
+                        <label class="form-label">Itens Coletados (Sistema)</label>
+                        <input type="number" name="ItensColetados" class="form-control" value="{{ point.ItensColetados }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Pontuação do Ponto (Sistema)</label>
+                        <input type="number" name="Pontuacao" class="form-control" value="{{ point.Pontuacao }}" required>
+                    </div>
+                    
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
 {% endblock %}

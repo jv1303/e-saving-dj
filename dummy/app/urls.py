@@ -17,4 +17,7 @@ urlpatterns = [
     path('parceiro/atualizar/', views.update_partner, name='update_partner'),
     path('parceiro/pontos/', views.manage_collection_points, name='manage_collection_points'),
     path('parceiro/pontos/criar/', views.create_collection_point, name='create_collection_point'),
+    path('parceiro/pontos/atualizar/<str:point_id>/', views.update_collection_point, name='update_collection_point'),
+    path('parceiro/pontos/excluir/<str:point_id>/', views.delete_collection_point, name='delete_collection_point'),
+    path('parceiro/itens/registar/', views.register_item, name='register_item'),
 ]
