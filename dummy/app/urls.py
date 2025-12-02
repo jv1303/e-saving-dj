@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
 
+
 urlpatterns = [
     path('', views.home, name='home'),
     path('cadastro/', views.register_user, name='register_user'),
@@ -24,3 +25,6 @@ urlpatterns = [
     path('parceiro/itens/excluir/<str:item_id>/', views.delete_item, name='delete_item'),
     path('quem-somos/', views.quem_somos, name='quem_somos'),
 ]
+
+handler404 = 'app.views.custom_404'
+handler500 = 'app.views.custom_500'

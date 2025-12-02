@@ -443,3 +443,11 @@ def delete_item(request, item_id):
 
 def quem_somos(request):
     return render(request, 'quem_somos.html')
+
+def custom_404(request, exception):
+    # O Django exige que a exceção seja passada, mesmo que não seja usada
+    return render(request, 'error.html', {'status_code': 404}, status=404)
+
+def custom_500(request):
+    # O Django exige que a requisição seja passada
+    return render(request, 'error.html', {'status_code': 500}, status=500)

@@ -28,6 +28,7 @@
                 </button>
                 
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
                             <a class="nav-link text-dark" href="{% url 'home' %}">Início</a>
@@ -36,15 +37,10 @@
                             <a class="nav-link text-dark" href="{% url 'pontos_coleta' %}">Pontos de Coleta</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" href="#">Seja um Parceiro</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" href="{% url 'quem_somos' %}">Quem Somos</a>
-                        </li>
-
-
-                        <li class="nav-item">
                             <a class="nav-link text-dark" href="{% url 'partner_register' %}">Seja um Parceiro</a>
+                        </li>
+                         <li class="nav-item">
+                            <a class="nav-link text-dark" href="{% url 'quem_somos' %}">Quem Somos</a>
                         </li>
                     </ul>
                     
@@ -54,9 +50,30 @@
                                 Olá, {{ request.session.user_name }}
                             </a>
                             <a class="btn btn-outline-danger ml-2" href="{% url 'logout_user' %}">Sair</a>
+                        {% elif request.session.partner_name %}
+                            <a class="nav-link text-dark fw-bold" href="{% url 'partner_area' %}">
+                                Parceiro: {{ request.session.partner_name }}
+                            </a>
+                            <a class="btn btn-outline-danger ml-2" href="{% url 'logout_user' %}">Sair</a>
                         {% else %}
-                            <a class="nav-link text-dark" href="{% url 'register_user' %}">Cadastre-se</a>
-                            <a class="btn btn-primary ml-2" href="{% url 'login_user' %}">Entrar</a>
+                            <div class="dropdown me-2">
+                                <button class="btn btn-link text-dark dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Entrar
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item" href="{% url 'login_user' %}">Entrar como Cliente</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'login_partner' %}">Entrar como Parceiro</a></li>
+                                </ul>
+                            </div>
+                            <div class="dropdown">
+                                <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Registar
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item" href="{% url 'register_user' %}">Registar Cliente</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'partner_register' %}">Registar Parceiro</a></li>
+                                </ul>
+                            </div>
                         {% endif %}
                     </div>
                     </div>
@@ -73,7 +90,7 @@
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2025 - e-Saving - <a href="#">Privacidade</a>
+            &copy; 2025 - e-Saving - <a href="{% url 'quem_somos' %}">Privacidade</a>
         </div>
     </footer>
 
