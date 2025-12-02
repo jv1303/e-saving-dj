@@ -20,4 +20,7 @@ urlpatterns = [
     path('parceiro/pontos/atualizar/<str:point_id>/', views.update_collection_point, name='update_collection_point'),
     path('parceiro/pontos/excluir/<str:point_id>/', views.delete_collection_point, name='delete_collection_point'),
     path('parceiro/itens/registar/', views.register_item, name='register_item'),
+    path('parceiro/inventario/', views.item_inventory, name='item_inventory'), 
+    path('parceiro/itens/excluir/<str:item_id>/', views.delete_item, name='delete_item'),
+    path('quem-somos/', views.quem_somos, name='quem_somos'),
 ]
