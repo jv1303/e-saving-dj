@@ -1,0 +1,2 @@
+Django==3.2.20
+pymongo==4.5.0
