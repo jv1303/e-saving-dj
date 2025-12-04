@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}Minha Área{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow-sm text-center p-4 mb-4">
+                {% if cliente.foto_perfil %}
+                    <img src="{{ cliente.foto_perfil.url }}" class="rounded-circle mx-auto d-block mb-3" style="width: 150px; height: 150px; object-fit: cover; border: 4px solid #198754;">
+                {% else %}
+                    <img src="https://via.placeholder.com/150" class="rounded-circle mx-auto d-block mb-3" alt="Sem Foto">
+                {% endif %}
+                
+                <h4>{{ user.first_name }}</h4>
+                <p class="text-muted">Cidadão Consciente</p>
+                <hr>
+                <div class="text-start">
+                    <p><strong>CPF:</strong> {{ cliente.cpf }}</p>
+                    <p><strong>Email:</strong> {{ user.email }}</p>
+                    <p><strong>CEP:</strong> {{ cliente.cep }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <h3 class="text-success mb-4">Meu Impacto</h3>
+            
+            <div class="row text-center">
+                <div class="col-md-6 mb-3">
+                    <div class="card bg-success text-white shadow h-100 py-4">
+                        <div class="card-body">
+                            <h1 class="display-4 fw-bold">{{ cliente.pontos }}</h1>
+                            <p class="fs-5">Eco-Pontos Acumulados</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="card bg-dark text-white shadow h-100 py-4">
+                        <div class="card-body">
+                            <h1 class="display-4 fw-bold">{{ cliente.itens_descartados }}</h1>
+                            <p class="fs-5">Itens Reciclados</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4 p-4 bg-light rounded border">
+                <h5>Próximos Passos</h5>
+                <p>Vá até um ponto de coleta parceiro e informe seu CPF ao descartar um item para ganhar mais pontos!</p>
+                <a href="{% url 'mapa' %}" class="btn btn-outline-success">Encontrar Pontos de Coleta</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

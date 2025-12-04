@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="p-5 mb-4 bg-light rounded-3 text-center">
+    <div class="container-fluid py-5">
+        <h1 class="display-5 fw-bold text-success">Bem-vindo ao E-Saving</h1>
+        <p class="col-md-8 fs-4 mx-auto">A solução inteligente para o descarte do seu lixo eletrônico. Encontre pontos de coleta, acumule pontos e ajude o planeta.</p>
+        <div class="mt-4">
+            <a href="{% url 'mapa' %}" class="btn btn-success btn-lg px-4 me-2">Ver Mapa de Coleta</a>
+            {% if not user.is_authenticated %}
+                <a href="{% url 'register_cliente' %}" class="btn btn-outline-secondary btn-lg px-4">Cadastre-se</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row align-items-md-stretch">
+    <div class="col-md-6 mb-4">
+        <div class="h-100 p-5 text-white bg-dark rounded-3">
+            <h2>Para Empresas (Parceiros)</h2>
+            <p>Cadastre seus pontos de coleta, gerencie seu estoque de resíduos e conecte-se com a comunidade local.</p>
+            <a href="{% url 'register_parceiro' %}" class="btn btn-outline-light">Seja um Parceiro</a>
+        </div>
+    </div>
+    <div class="col-md-6 mb-4">
+        <div class="h-100 p-5 bg-light border rounded-3">
+            <h2>Para Cidadãos</h2>
+            <p>Não sabe onde jogar aquele celular velho? Nós te mostramos o caminho mais perto e correto.</p>
+            <a href="{% url 'quem_somos' %}" class="btn btn-outline-success">Saiba Mais</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

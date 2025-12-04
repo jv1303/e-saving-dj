@@ -1,0 +1,8 @@
+django==4.1.13
+djongo
+pymongo==3.12.3
+pillow
+django-crispy-forms
+tzdata
+crispy-bootstrap4
+sqlparse==0.4.4
