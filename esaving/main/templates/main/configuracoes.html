@@ -1,0 +1,415 @@
+{% extends "base.html" %}
+
+{% block title %}Configurações{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Cabeçalho -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Configurações</h1>
+    </div>
+
+    <div class="row">
+        <!-- Menu Lateral -->
+        <div class="col-lg-3 mb-4">
+            <div class="card shadow">
+                <div class="card-body">
+                    <div class="nav flex-column nav-pills" id="configTab" role="tablist">
+                        <a class="nav-link active" id="perfil-tab" data-toggle="pill" href="#perfil" role="tab">
+                            <i class="fas fa-user fa-fw mr-2"></i>Perfil
+                        </a>
+                        <a class="nav-link" id="conta-tab" data-toggle="pill" href="#conta" role="tab">
+                            <i class="fas fa-cog fa-fw mr-2"></i>Conta
+                        </a>
+                        <a class="nav-link" id="notificacoes-tab" data-toggle="pill" href="#notificacoes" role="tab">
+                            <i class="fas fa-bell fa-fw mr-2"></i>Notificações
+                        </a>
+                        <a class="nav-link" id="preferencias-tab" data-toggle="pill" href="#preferencias" role="tab">
+                            <i class="fas fa-sliders-h fa-fw mr-2"></i>Preferências
+                        </a>
+                        {% if user.is_superuser %}
+                        <a class="nav-link" id="admin-tab" data-toggle="pill" href="#admin" role="tab">
+                            <i class="fas fa-shield-alt fa-fw mr-2"></i>Administração
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Conteúdo -->
+        <div class="col-lg-9">
+            <div class="tab-content" id="configTabContent">
+                <!-- Aba Perfil -->
+                <div class="tab-pane fade show active" id="perfil" role="tabpanel">
+                    <div class="card shadow">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Informações do Perfil</h6>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" action="{% url 'atualizar_perfil' %}">
+                                {% csrf_token %}
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="nome">Nome Completo</label>
+                                            <input type="text" class="form-control" id="nome" name="nome" 
+                                                   value="{{ user.nome }}" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="email">E-mail</label>
+                                            <input type="email" class="form-control" id="email" name="email" 
+                                                   value="{{ user.email }}" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="telefone">Telefone</label>
+                                            <input type="tel" class="form-control" id="telefone" name="telefone" 
+                                                   value="{{ user.telefone }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="tipo_usuario">Tipo de Usuário</label>
+                                            <input type="text" class="form-control" id="tipo_usuario" 
+                                                   value="{{ user.get_tipo_display }}" readonly disabled>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="bio">Biografia</label>
+                                    <textarea class="form-control" id="bio" name="bio" rows="4">{{ user.bio }}</textarea>
+                                    <small class="form-text text-muted">Conte um pouco sobre você e seu trabalho</small>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="foto_perfil">Foto de Perfil</label>
+                                    <div class="custom-file">
+                                        <input type="file" class="custom-file-input" id="foto_perfil" name="foto_perfil">
+                                        <label class="custom-file-label" for="foto_perfil">Escolher arquivo...</label>
+                                    </div>
+                                    {% if user.foto_perfil %}
+                                    <div class="mt-2">
+                                        <img src="{{ user.foto_perfil.url }}" alt="Foto atual" class="img-thumbnail" width="100">
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Aba Conta -->
+                <div class="tab-pane fade" id="conta" role="tabpanel">
+                    <div class="card shadow">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Configurações da Conta</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-4">
+                                <h6 class="font-weight-bold">Alterar Senha</h6>
+                                <form method="POST" action="{% url 'alterar_senha' %}">
+                                    {% csrf_token %}
+                                    <div class="form-group">
+                                        <label for="senha_atual">Senha Atual</label>
+                                        <input type="password" class="form-control" id="senha_atual" name="senha_atual" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="nova_senha">Nova Senha</label>
+                                        <input type="password" class="form-control" id="nova_senha" name="nova_senha" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="confirmar_senha">Confirmar Nova Senha</label>
+                                        <input type="password" class="form-control" id="confirmar_senha" name="confirmar_senha" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Alterar Senha</button>
+                                </form>
+                            </div>
+                            
+                            <hr>
+                            
+                            <div class="mt-4">
+                                <h6 class="font-weight-bold text-danger">Zona de Perigo</h6>
+                                <p class="text-muted">Ações irreversíveis. Tenha cuidado.</p>
+                                <button class="btn btn-outline-danger" data-toggle="modal" data-target="#modalExcluirConta">
+                                    <i class="fas fa-trash-alt fa-fw"></i> Excluir Minha Conta
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Aba Notificações -->
+                <div class="tab-pane fade" id="notificacoes" role="tabpanel">
+                    <div class="card shadow">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Preferências de Notificação</h6>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" action="{% url 'salvar_notificacoes' %}">
+                                {% csrf_token %}
+                                <div class="form-group">
+                                    <div class="custom-control custom-switch">
+                                        <input type="checkbox" class="custom-control-input" id="not_email" name="not_email" 
+                                               {% if config.not_email %}checked{% endif %}>
+                                        <label class="custom-control-label" for="not_email">
+                                            Receber notificações por e-mail
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <div class="custom-control custom-switch">
+                                        <input type="checkbox" class="custom-control-input" id="not_novidades" name="not_novidades"
+                                               {% if config.not_novidades %}checked{% endif %}>
+                                        <label class="custom-control-label" for="not_novidades">
+                                            Receber novidades e atualizações
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <div class="custom-control custom-switch">
+                                        <input type="checkbox" class="custom-control-input" id="not_analise" name="not_analise"
+                                               {% if config.not_analise %}checked{% endif %}>
+                                        <label class="custom-control-label" for="not_analise">
+                                            Notificar quando músicas forem analisadas
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <div class="custom-control custom-switch">
+                                        <input type="checkbox" class="custom-control-input" id="not_parceiro" name="not_parceiro"
+                                               {% if config.not_parceiro %}checked{% endif %}>
+                                        <label class="custom-control-label" for="not_parceiro">
+                                            Notificar novos envios de parceiros (apenas administradores)
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary">Salvar Preferências</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Aba Preferências -->
+                <div class="tab-pane fade" id="preferencias" role="tabpanel">
+                    <div class="card shadow">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Preferências da Plataforma</h6>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" action="{% url 'salvar_preferencias' %}">
+                                {% csrf_token %}
+                                <div class="form-group">
+                                    <label for="idioma">Idioma</label>
+                                    <select class="form-control" id="idioma" name="idioma">
+                                        <option value="pt" {% if config.idioma == 'pt' %}selected{% endif %}>Português (Brasil)</option>
+                                        <option value="en" {% if config.idioma == 'en' %}selected{% endif %}>English</option>
+                                        <option value="es" {% if config.idioma == 'es' %}selected{% endif %}>Español</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="tema">Tema Visual</label>
+                                    <select class="form-control" id="tema" name="tema">
+                                        <option value="claro" {% if config.tema == 'claro' %}selected{% endif %}>Claro</option>
+                                        <option value="escuro" {% if config.tema == 'escuro' %}selected{% endif %}>Escuro</option>
+                                        <option value="auto" {% if config.tema == 'auto' %}selected{% endif %}>Automático (segue sistema)</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="itens_por_pagina">Itens por Página</label>
+                                    <select class="form-control" id="itens_por_pagina" name="itens_por_pagina">
+                                        <option value="10" {% if config.itens_por_pagina == 10 %}selected{% endif %}>10 itens</option>
+                                        <option value="25" {% if config.itens_por_pagina == 25 %}selected{% endif %}>25 itens</option>
+                                        <option value="50" {% if config.itens_por_pagina == 50 %}selected{% endif %}>50 itens</option>
+                                        <option value="100" {% if config.itens_por_pagina == 100 %}selected{% endif %}>100 itens</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="formato_data">Formato de Data</label>
+                                    <select class="form-control" id="formato_data" name="formato_data">
+                                        <option value="d/m/Y" {% if config.formato_data == 'd/m/Y' %}selected{% endif %}>DD/MM/AAAA</option>
+                                        <option value="Y-m-d" {% if config.formato_data == 'Y-m-d' %}selected{% endif %}>AAAA-MM-DD</option>
+                                        <option value="m/d/Y" {% if config.formato_data == 'm/d/Y' %}selected{% endif %}>MM/DD/AAAA</option>
+                                    </select>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary">Salvar Preferências</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Aba Administração (apenas para superusuários) -->
+                {% if user.is_superuser %}
+                <div class="tab-pane fade" id="admin" role="tabpanel">
+                    <div class="card shadow">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Configurações Administrativas</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                Estas configurações afetam toda a plataforma. Use com cuidado.
+                            </div>
+                            
+                            <form method="POST" action="{% url 'salvar_config_admin' %}">
+                                {% csrf_token %}
+                                <div class="form-group">
+                                    <label for="manutencao">Modo de Manutenção</label>
+                                    <select class="form-control" id="manutencao" name="manutencao">
+                                        <option value="false" {% if not config.modo_manutencao %}selected{% endif %}>Desativado</option>
+                                        <option value="true" {% if config.modo_manutencao %}selected{% endif %}>Ativado</option>
+                                    </select>
+                                    <small class="form-text text-muted">Quando ativado, apenas administradores podem acessar a plataforma.</small>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="limite_upload">Limite de Upload (MB)</label>
+                                    <input type="number" class="form-control" id="limite_upload" name="limite_upload" 
+                                           value="{{ config.limite_upload_mb }}" min="1" max="500">
+                                    <small class="form-text text-muted">Tamanho máximo de arquivos de áudio enviados.</small>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="tempo_analise">Tempo Médio de Análise (dias)</label>
+                                    <input type="number" class="form-control" id="tempo_analise" name="tempo_analise" 
+                                           value="{{ config.tempo_analise_dias }}" min="1" max="30">
+                                    <small class="form-text text-muted">Tempo estimado para análise de músicas enviadas.</small>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary">Salvar Configurações</button>
+                            </form>
+                            
+                            <hr class="my-4">
+                            
+                            <h6 class="font-weight-bold">Ferramentas Administrativas</h6>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <a href="{% url 'backup_dados' %}" class="btn btn-outline-info btn-block">
+                                        <i class="fas fa-database fa-fw"></i> Fazer Backup
+                                    </a>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <button class="btn btn-outline-warning btn-block" data-toggle="modal" data-target="#modalLimparCache">
+                                        <i class="fas fa-broom fa-fw"></i> Limpar Cache
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Excluir Conta -->
+<div class="modal fade" id="modalExcluirConta" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger">Excluir Conta</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Atenção!</strong> Esta ação é irreversível.
+                </div>
+                <p>Todos os seus dados serão permanentemente removidos, incluindo:</p>
+                <ul>
+                    <li>Perfil de usuário</li>
+                    <li>Playlists criadas</li>
+                    <li>Histórico de atividades</li>
+                    <li>Envios de músicas (se for parceiro)</li>
+                </ul>
+                <p>Para confirmar, digite "EXCLUIR" no campo abaixo:</p>
+                <input type="text" class="form-control" id="confirmacaoExclusao" placeholder="Digite EXCLUIR">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="btnConfirmarExclusao" disabled>
+                    Excluir Minha Conta Permanentemente
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Limpar Cache (apenas admin) -->
+{% if user.is_superuser %}
+<div class="modal fade" id="modalLimparCache" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Limpar Cache</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja limpar o cache da plataforma?</p>
+                <p class="text-muted small">Isso pode melhorar o desempenho, mas pode causar carregamentos lentos na próxima requisição.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <a href="{% url 'limpar_cache' %}" class="btn btn-warning">Limpar Cache</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        // Controle das abas
+        $('a[data-toggle="pill"]').on('shown.bs.tab', function(e) {
+            localStorage.setItem('ultimaAbaConfig', e.target.id);
+        });
+        
+        // Restaurar última aba aberta
+        var ultimaAba = localStorage.getItem('ultimaAbaConfig');
+        if (ultimaAba) {
+            $('#' + ultimaAba).tab('show');
+        }
+        
+        // Validação de exclusão de conta
+        $('#confirmacaoExclusao').on('input', function() {
+            var confirmacao = $(this).val();
+            $('#btnConfirmarExclusao').prop('disabled', confirmacao !== 'EXCLUIR');
+        });
+        
+        // Confirmar exclusão
+        $('#btnConfirmarExclusao').click(function() {
+            window.location.href = "{% url 'excluir_conta' %}";
+        });
+        
+        // Nome do arquivo no input file
+        $('.custom-file-input').on('change', function() {
+            var fileName = $(this).val().split('\\').pop();
+            $(this).next('.custom-file-label').addClass("selected").html(fileName);
+        });
+    });
+</script>
+{% endblock %}

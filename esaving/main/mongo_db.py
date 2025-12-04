@@ -73,6 +73,14 @@ class MongoDBManager:
             user['id'] = str(user['_id'])
             del user['_id']
         
+        # Remover campos datetime ou convertê-los para string
+        if user:
+            # Converter campos datetime para string
+            campos_datetime = ['created_at', 'updated_at']
+            for campo in campos_datetime:
+                if campo in user and isinstance(user[campo], datetime):
+                    user[campo] = user[campo].isoformat()
+        
         return user
     
     @staticmethod

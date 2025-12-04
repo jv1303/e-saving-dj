@@ -1,0 +1,271 @@
+{% extends 'main/base.html' %}
+
+{% block title %}Estatísticas - E-Saving{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="bi bi-graph-up"></i> Estatísticas de Coleta
+                    </h4>
+                    <a href="{% url 'area_parceiro' %}" class="btn btn-light btn-sm">
+                        <i class="bi bi-arrow-left"></i> Voltar
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3 col-6 mb-4">
+                        <div class="card border-primary">
+                            <div class="card-body">
+                                <div class="display-4 text-primary">{{ total_registros }}</div>
+                                <h6 class="text-muted">Total de Coletas</h6>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6 mb-4">
+                        <div class="card border-success">
+                            <div class="card-body">
+                                <div class="display-4 text-success">{{ total_coletado|floatformat:2 }}</div>
+                                <h6 class="text-muted">Total (kg)</h6>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6 mb-4">
+                        <div class="card border-info">
+                            <div class="card-body">
+                                {% if total_registros > 0 %}
+                                    <div class="display-4 text-info">{{ media_coleta|floatformat:2 }}</div>
+                                {% else %}
+                                    <div class="display-4 text-info">0.00</div>
+                                {% endif %}
+                                <h6 class="text-muted">Média por Coleta (kg)</h6>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6 mb-4">
+                        <div class="card border-warning">
+                            <div class="card-body">
+                                <div class="display-4 text-warning">{{ tipos_unicos|length }}</div>
+                                <h6 class="text-muted">Tipos de Resíduos</h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-pie-chart"></i> Distribuição por Tipo de Resíduo
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if por_tipo %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Tipo de Resíduo</th>
+                                    <th class="text-end">Quantidade (kg)</th>
+                                    <th class="text-end">Porcentagem</th>
+                                    <th class="text-end">Nº de Coletas</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for tipo, quantidade in por_tipo.items %}
+                                <tr>
+                                    <td>
+                                        <i class="bi bi-circle-fill" style="color: {{ forloop.counter|random_color }}"></i>
+                                        {{ tipo|title }}
+                                    </td>
+                                    <td class="text-end">{{ quantidade|floatformat:2 }}</td>
+                                    <td class="text-end">
+                                        {% widthratio quantidade total_coletado 100 as percentage %}
+                                        {{ percentage|floatformat:1 }}%
+                                    </td>
+                                    <td class="text-end">
+                                        {% with count=tipo_count|get_item:tipo|default:0 %}
+                                            {{ count }}
+                                        {% endwith %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot class="table-secondary">
+                                <tr>
+                                    <th>Total</th>
+                                    <th class="text-end">{{ total_coletado|floatformat:2 }} kg</th>
+                                    <th class="text-end">100%</th>
+                                    <th class="text-end">{{ total_registros }}</th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-bar-chart display-1 text-muted mb-3"></i>
+                        <h5 class="text-muted">Nenhuma estatística disponível</h5>
+                        <p class="text-muted">Registre suas primeiras coletas para visualizar estatísticas.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-calendar-check"></i> Últimas Coletas
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if coletas %}
+                    <div class="timeline">
+                        {% for coleta in coletas|slice:":10" %}
+                        <div class="timeline-item mb-3">
+                            <div class="timeline-marker bg-success"></div>
+                            <div class="timeline-content">
+                                <h6 class="mb-1">{{ coleta.tipo_residuo|title }}</h6>
+                                <p class="mb-1 small">
+                                    <strong>{{ coleta.quantidade }} {{ coleta.unidade }}</strong>
+                                    {% if coleta.data %}
+                                        <span class="text-muted"> • {{ coleta.data }}</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-inbox display-4 text-muted mb-3"></i>
+                        <p class="text-muted">Nenhuma coleta registrada ainda.</p>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="card-footer">
+                <div class="alert alert-warning mb-0">
+                    <small>
+                        <i class="bi bi-lightbulb"></i> 
+                        <strong>Dica:</strong> Mantenha um registro detalhado para melhorar suas estatísticas.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-download"></i> Exportar Dados
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="card border-dashed h-100">
+                            <div class="card-body text-center">
+                                <i class="bi bi-file-text display-4 text-primary mb-3"></i>
+                                <h5>Relatório PDF</h5>
+                                <p class="text-muted small">Exporte suas estatísticas em formato PDF</p>
+                                <button class="btn btn-outline-primary" disabled>
+                                    <i class="bi bi-download"></i> Em Breve
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card border-dashed h-100">
+                            <div class="card-body text-center">
+                                <i class="bi bi-file-excel display-4 text-success mb-3"></i>
+                                <h5>Planilha Excel</h5>
+                                <p class="text-muted small">Exporte dados brutos para análise</p>
+                                <button class="btn btn-outline-success" disabled>
+                                    <i class="bi bi-download"></i> Em Breve
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card border-dashed h-100">
+                            <div class="card-body text-center">
+                                <i class="bi bi-graph-up display-4 text-info mb-3"></i>
+                                <h5>Gráficos</h5>
+                                <p class="text-muted small">Visualize gráficos interativos</p>
+                                <button class="btn btn-outline-info" disabled>
+                                    <i class="bi bi-eye"></i> Em Breve
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline-item {
+    position: relative;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -30px;
+    top: 5px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.timeline-content {
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.border-dashed {
+    border: 2px dashed #dee2e6 !important;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Função para gerar cores aleatórias para os tipos
+function randomColor(index) {
+    const colors = [
+        '#FF6B6B', '#4ECDC4', '#FFD166', '#06D6A0', 
+        '#118AB2', '#EF476F', '#073B4C', '#7209B7'
+    ];
+    return colors[index % colors.length];
+}
+
+// Adicionar cores aos ícones
+document.addEventListener('DOMContentLoaded', function() {
+    const icons = document.querySelectorAll('.bi-circle-fill');
+    icons.forEach((icon, index) => {
+        icon.style.color = randomColor(index);
+    });
+});
+</script>
+{% endblock %}

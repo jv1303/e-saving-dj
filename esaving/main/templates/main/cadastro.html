@@ -1,0 +1,240 @@
+{% extends 'main/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Cadastro - E-Saving{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">
+                    <i class="bi bi-person-plus"></i> Cadastro de Ponto de Coleta
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" novalidate>
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.username.id_for_label }}" class="form-label">Nome de usuário *</label>
+                            {{ form.username }}
+                            {% if form.username.errors %}
+                                <div class="text-danger small">{{ form.username.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.email.id_for_label }}" class="form-label">E-mail *</label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                                <div class="text-danger small">{{ form.email.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.telefone.id_for_label }}" class="form-label">Telefone *</label>
+                            {{ form.telefone }}
+                            <small class="form-text text-muted">Formato: (XX) XXXXX-XXXX</small>
+                            {% if form.telefone.errors %}
+                                <div class="text-danger small">{{ form.telefone.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.cep.id_for_label }}" class="form-label">CEP *</label>
+                            {{ form.cep }}
+                            <small class="form-text text-muted">Formato: XXXXX-XXX</small>
+                            {% if form.cep.errors %}
+                                <div class="text-danger small">{{ form.cep.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.cpf_cnpj.id_for_label }}" class="form-label">CPF ou CNPJ *</label>
+                        {{ form.cpf_cnpj }}
+                        {% if form.cpf_cnpj.errors %}
+                            <div class="text-danger small">{{ form.cpf_cnpj.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.endereco.id_for_label }}" class="form-label">Endereço completo *</label>
+                        {{ form.endereco }}
+                        {% if form.endereco.errors %}
+                            <div class="text-danger small">{{ form.endereco.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.password.id_for_label }}" class="form-label">Senha *</label>
+                            {{ form.password }}
+                            {% if form.password.errors %}
+                                <div class="text-danger small">{{ form.password.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.password_confirm.id_for_label }}" class="form-label">Confirmar senha *</label>
+                            {{ form.password_confirm }}
+                            {% if form.password_confirm.errors %}
+                                <div class="text-danger small">{{ form.password_confirm.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="termos" required>
+                        <label class="form-check-label" for="termos">
+                            Li e concordo com os 
+                            <a href="#" data-bs-toggle="modal" data-bs-target="#termosModal">Termos de Uso</a> 
+                            e 
+                            <a href="#" data-bs-toggle="modal" data-bs-target="#privacidadeModal">Política de Privacidade</a>
+                        </label>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="bi bi-check-circle"></i> Cadastrar Ponto de Coleta
+                        </button>
+                        <a href="{% url 'login' %}" class="btn btn-outline-secondary">
+                            Já tem uma conta? Faça login
+                        </a>
+                    </div>
+                </form>
+            </div>
+            <div class="card-footer text-center">
+                <small class="text-muted">
+                    <i class="bi bi-info-circle"></i> 
+                    Cada CPF/CNPJ pode cadastrar apenas um ponto de coleta.
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Termos de Uso -->
+<div class="modal fade" id="termosModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Termos de Uso</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6>1. Aceitação dos Termos</h6>
+                <p>Ao acessar e usar a plataforma E-Saving, você concorda com estes termos.</p>
+                
+                <h6>2. Cadastro</h6>
+                <p>Cada ponto de coleta deve ser cadastrado com informações verdadeiras.</p>
+                
+                <h6>3. Responsabilidades</h6>
+                <p>O ponto de coleta é responsável pela veracidade das informações fornecidas.</p>
+                
+                <h6>4. Privacidade</h6>
+                <p>Seus dados serão utilizados apenas para os fins da plataforma.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Política de Privacidade -->
+<div class="modal fade" id="privacidadeModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Política de Privacidade</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6>1. Coleta de Dados</h6>
+                <p>Coletamos apenas os dados necessários para o funcionamento da plataforma.</p>
+                
+                <h6>2. Uso dos Dados</h6>
+                <p>Os dados são usados apenas para geolocalização e estatísticas de coleta.</p>
+                
+                <h6>3. Proteção</h6>
+                <p>Utilizamos criptografia para proteger suas informações.</p>
+                
+                <h6>4. Compartilhamento</h6>
+                <p>Não compartilhamos seus dados com terceiros sem sua autorização.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Máscaras para os campos
+    const telefoneInput = document.querySelector('input[name="telefone"]');
+    const cepInput = document.querySelector('input[name="cep"]');
+    const cpfCnpjInput = document.querySelector('input[name="cpf_cnpj"]');
+    
+    if (telefoneInput) {
+        telefoneInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 10) {
+                value = value.replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3');
+            } else if (value.length > 6) {
+                value = value.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, '($1) $2-$3');
+            } else if (value.length > 2) {
+                value = value.replace(/^(\d{2})(\d{0,5})/, '($1) $2');
+            } else if (value.length > 0) {
+                value = value.replace(/^(\d*)/, '($1');
+            }
+            e.target.value = value;
+        });
+    }
+    
+    if (cepInput) {
+        cepInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 5) {
+                value = value.replace(/^(\d{5})(\d{0,3}).*/, '$1-$2');
+            }
+            e.target.value = value;
+        });
+    }
+    
+    if (cpfCnpjInput) {
+        cpfCnpjInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 11) {
+                // CNPJ: 00.000.000/0000-00
+                value = value.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{0,2})/, '$1.$2.$3/$4-$5');
+            } else {
+                // CPF: 000.000.000-00
+                value = value.replace(/^(\d{3})(\d{3})(\d{3})(\d{0,2})/, '$1.$2.$3-$4');
+            }
+            e.target.value = value;
+        });
+    }
+    
+    // Validação do formulário
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const termosCheckbox = document.getElementById('termos');
+            if (!termosCheckbox.checked) {
+                e.preventDefault();
+                alert('Você deve aceitar os Termos de Uso e Política de Privacidade para continuar.');
+                termosCheckbox.focus();
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,275 @@
+{% extends 'main/base.html' %}
+
+{% block title %}Área do Parceiro - E-Saving{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="bi bi-person-circle"></i> Área do Parceiro
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-2 text-center mb-3 mb-md-0">
+                        <div class="avatar-placeholder bg-success text-white rounded-circle d-flex align-items-center justify-content-center mx-auto" style="width: 100px; height: 100px; font-size: 2.5rem;">
+                            <i class="bi bi-building"></i>
+                        </div>
+                    </div>
+                    <div class="col-md-10">
+                        <h3>Olá, {{ user.username }}!</h3>
+                        <p class="lead mb-2">
+                            <i class="bi bi-geo-alt"></i> {{ user.endereco|default:"Endereço não informado" }}
+                        </p>
+                        <p class="text-muted">
+                            <i class="bi bi-telephone"></i> {{ user.telefone|default:"Telefone não informado" }} | 
+                            <i class="bi bi-clock"></i> {{ user.horario_funcionamento|default:"Horário não definido" }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-bar-chart"></i> Resumo de Coletas
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center">
+                    <div class="display-3 text-success mb-2">{{ total_coletas }}</div>
+                    <h6 class="text-muted">Total de Coletas Registradas</h6>
+                </div>
+                <hr>
+                <div class="text-center">
+                    <div class="display-4 text-primary mb-2">{{ total_coletado|floatformat:2 }} kg</div>
+                    <h6 class="text-muted">Quantidade Total Coletada</h6>
+                </div>
+            </div>
+            <div class="card-footer text-center">
+                <a href="{% url 'estatisticas' %}" class="btn btn-outline-success btn-sm">
+                    <i class="bi bi-graph-up"></i> Ver Estatísticas Detalhadas
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-clock-history"></i> Coletas Recentes
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if coletas %}
+                    <div class="list-group list-group-flush">
+                        {% for coleta in coletas %}
+                        <div class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ coleta.tipo_residuo|title }}</h6>
+                                <small class="text-muted">{{ coleta.quantidade }} {{ coleta.unidade }}</small>
+                            </div>
+                            <p class="mb-1 small text-muted">
+                                <i class="bi bi-calendar"></i> 
+                                {% if coleta.data %}
+                                    {{ coleta.data }}
+                                {% else %}
+                                    Data não informada
+                                {% endif %}
+                            </p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-inbox display-4 text-muted mb-3"></i>
+                        <p class="text-muted">Nenhuma coleta registrada ainda.</p>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="card-footer text-center">
+                <button type="button" class="btn btn-outline-info btn-sm" data-bs-toggle="modal" data-bs-target="#novaColetaModal">
+                    <i class="bi bi-plus-circle"></i> Registrar Nova Coleta
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header bg-warning text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-gear"></i> Ações Rápidas
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'configuracoes' %}" class="btn btn-outline-warning">
+                        <i class="bi bi-pencil-square"></i> Editar Informações
+                    </a>
+                    <a href="{% url 'index' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-map"></i> Ver Mapa de Pontos
+                    </a>
+                    <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#compartilharModal">
+                        <i class="bi bi-share"></i> Compartilhar Ponto
+                    </button>
+                    <a href="{% url 'quem_somos' %}" class="btn btn-outline-info">
+                        <i class="bi bi-info-circle"></i> Sobre o E-Saving
+                    </a>
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="alert alert-info mb-0">
+                    <small>
+                        <i class="bi bi-lightbulb"></i> 
+                        <strong>Dica:</strong> Mantenha suas informações atualizadas para que os usuários possam encontrá-lo facilmente.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-recycle"></i> Tipos de Resíduos Aceitos
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if user.tipos_residuos %}
+                    <div class="row">
+                        {% for tipo in user.tipos_residuos %}
+                        <div class="col-md-3 col-6 mb-2">
+                            <div class="badge bg-success p-2 w-100">
+                                <i class="bi bi-check-circle"></i> {{ tipo|title }}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        Você ainda não definiu os tipos de resíduos que aceita. 
+                        <a href="{% url 'configuracoes' %}" class="alert-link">Clique aqui para configurar</a>.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nova Coleta -->
+<div class="modal fade" id="novaColetaModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-plus-circle"></i> Registrar Nova Coleta
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Para registrar uma nova coleta, entre em contato com o suporte para ativar esta funcionalidade.</p>
+                <div class="alert alert-info">
+                    <h6><i class="bi bi-info-circle"></i> Informações de Contato</h6>
+                    <ul class="mb-0">
+                        <li><strong>E-mail:</strong> suporte@esaving.com</li>
+                        <li><strong>Telefone:</strong> (11) 99999-9999</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Compartilhar -->
+<div class="modal fade" id="compartilharModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-share"></i> Compartilhar Seu Ponto
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Compartilhe seu ponto de coleta com a comunidade:</p>
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" id="linkCompartilhamento" 
+                           value="http://127.0.0.1:8000/#ponto-{{ user.username }}" readonly>
+                    <button class="btn btn-outline-primary" type="button" onclick="copiarLink()">
+                        <i class="bi bi-clipboard"></i> Copiar
+                    </button>
+                </div>
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle"></i> Link copiado para a área de transferência!
+                </div>
+                <div class="text-center mt-3">
+                    <p>Ou compartilhe nas redes sociais:</p>
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-primary">
+                            <i class="bi bi-facebook"></i> Facebook
+                        </button>
+                        <button type="button" class="btn btn-info">
+                            <i class="bi bi-twitter"></i> Twitter
+                        </button>
+                        <button type="button" class="btn btn-success">
+                            <i class="bi bi-whatsapp"></i> WhatsApp
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function copiarLink() {
+    const linkInput = document.getElementById('linkCompartilhamento');
+    linkInput.select();
+    linkInput.setSelectionRange(0, 99999); // Para dispositivos móveis
+    
+    try {
+        navigator.clipboard.writeText(linkInput.value);
+        
+        // Mostrar mensagem de sucesso
+        const alertDiv = document.querySelector('.alert-success');
+        alertDiv.classList.remove('d-none');
+        
+        // Ocultar após 3 segundos
+        setTimeout(() => {
+            alertDiv.classList.add('d-none');
+        }, 3000);
+    } catch (err) {
+        alert('Erro ao copiar link: ' + err);
+    }
+}
+
+// Esconder alerta inicialmente
+document.addEventListener('DOMContentLoaded', function() {
+    const alertDiv = document.querySelector('.alert-success');
+    if (alertDiv) {
+        alertDiv.classList.add('d-none');
+    }
+});
+</script>
+{% endblock %}

@@ -2,8 +2,10 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from .forms import CadastroPontoColetaForm, LoginForm, ConfiguracoesForm
 from .mongo_db import MongoDBManager
-import json
 from datetime import datetime
+from functools import wraps
+import json
+
 
 def index(request):
     """Página inicial com mapa"""
@@ -14,6 +16,16 @@ def index(request):
         'pontos_json': json.dumps(pontos, default=str, ensure_ascii=False)
     }
     return render(request, 'main/index.html', context)
+
+def login_required_custom(view_func):
+    """Decorator personalizado para verificar se o usuário está na sessão"""
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if 'user' not in request.session or not request.session['user']:
+            messages.error(request, 'Faça login para acessar esta área.')
+            return redirect('login')
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
 
 def cadastro(request):
     """Cadastro de ponto de coleta"""
@@ -55,9 +67,12 @@ def login_view(request):
             
             user = MongoDBManager.autenticar_usuario(username, password)
             if user:
+                # Converter objetos datetime para string ISO
+                user_serializable = converter_datetime_para_string(user)
+                
                 # Configurar sessão
-                request.session['user'] = user
-                messages.success(request, f'Bem-vindo, {user["username"]}!')
+                request.session['user'] = user_serializable
+                messages.success(request, f'Bem-vindo, {username}!')
                 return redirect('area_parceiro')
             else:
                 messages.error(request, 'Usuário ou senha inválidos.')
@@ -68,6 +83,24 @@ def login_view(request):
     
     return render(request, 'main/login.html', {'form': form})
 
+def converter_datetime_para_string(obj):
+    """Converte objetos datetime em um dicionário para strings ISO"""
+    if isinstance(obj, dict):
+        result = {}
+        for key, value in obj.items():
+            if isinstance(value, datetime):
+                result[key] = value.isoformat()
+            elif isinstance(value, dict):
+                result[key] = converter_datetime_para_string(value)
+            elif isinstance(value, list):
+                result[key] = [converter_datetime_para_string(item) if isinstance(item, dict) else 
+                              (item.isoformat() if isinstance(item, datetime) else item) 
+                              for item in value]
+            else:
+                result[key] = value
+        return result
+    return obj
+
 def logout_view(request):
     """Logout"""
     if 'user' in request.session:
@@ -75,6 +108,7 @@ def logout_view(request):
     messages.success(request, 'Logout realizado com sucesso.')
     return redirect('index')
 
+@login_required_custom
 def area_parceiro(request):
     """Área do parceiro (requer login)"""
     if 'user' not in request.session:
@@ -100,6 +134,7 @@ def quem_somos(request):
     """Página institucional"""
     return render(request, 'main/quem_somos.html')
 
+@login_required_custom
 def estatisticas(request):
     """Estatísticas detalhadas"""
     if 'user' not in request.session:
@@ -128,12 +163,40 @@ def estatisticas(request):
     
     return render(request, 'main/estatisticas.html', context)
 
-def configuracoes(request):
-    """Configurações do ponto"""
-    if 'user' not in request.session:
+@login_required_custom
+def area_parceiro(request):
+    """Área do parceiro (requer login)"""
+    user = request.session.get('user')
+    if not user:
+        messages.error(request, 'Faça login para acessar esta área.')
         return redirect('login')
     
-    user = request.session['user']
+    coletas = MongoDBManager.buscar_coletas_por_ponto(user['username'])
+    
+    # Calcular estatísticas básicas
+    total_coletado = sum(float(coleta.get('quantidade', 0)) for coleta in coletas)
+    
+    # Converter datetime nas coletas para string
+    coletas_serializaveis = []
+    for coleta in coletas:
+        coleta_serializavel = converter_datetime_para_string(coleta)
+        coletas_serializaveis.append(coleta_serializavel)
+    
+    context = {
+        'user': user,
+        'coletas': coletas_serializaveis[:5],  # Últimas 5 coletas
+        'total_coletado': total_coletado,
+        'total_coletas': len(coletas)
+    }
+    
+    return render(request, 'main/area_parceiro.html', context)
+
+@login_required_custom
+def configuracoes(request):
+    """Configurações do ponto"""
+    user = request.session.get('user')
+    if not user:
+        return redirect('login')
     
     if request.method == 'POST':
         form = ConfiguracoesForm(request.POST)
@@ -148,9 +211,11 @@ def configuracoes(request):
             
             if MongoDBManager.atualizar_usuario(user['username'], dados_atualizacao):
                 messages.success(request, 'Configurações atualizadas com sucesso!')
-                # Atualizar sessão
+                # Atualizar sessão - mesclar dados
                 user.update(dados_atualizacao)
-                request.session['user'] = user
+                # Garantir que não há objetos datetime
+                user_serializable = converter_datetime_para_string(user)
+                request.session['user'] = user_serializable
                 return redirect('configuracoes')
     else:
         # Carregar dados atuais
