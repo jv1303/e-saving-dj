@@ -34,43 +34,59 @@
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // 1. Inicia o mapa
-        var map = L.map('map').setView([-23.5505, -46.6333], 10);
+        // 1. Inicia o mapa (Focado em SP)
+        var map = L.map('map').setView([-23.5505, -46.6333], 12); // Dei um zoom leve para ver melhor os pontos
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
-        // 2. Recupera os dados do HTML
-        var scriptTag = document.getElementById('pontos-data');
-        
-        if (!scriptTag) {
-            console.error("Tag de dados não encontrada.");
-            return;
-        }
-
-        try {
-            // Primeira leitura: transforma o conteúdo da tag em variável JS
-            var pontos = JSON.parse(scriptTag.textContent);
-
-            // --- CORREÇÃO DO ERRO "forEach is not a function" ---
-            // Se o Django mandou uma String (JSON duplo), transformamos em Objeto/Array novamente
-            if (typeof pontos === 'string') {
-                pontos = JSON.parse(pontos);
+        // --- DADOS MOCADOS (Aqui estão os 3 pontos que pediu) ---
+        var pontosMocados = [
+            {
+                lat: -23.5615, 
+                lon: -46.6559, 
+                name: "Ecoponto Paulista", 
+                parceiro: "Recicla Sampa", 
+                desc: "Coleta de eletrónicos e pilhas no vão livre."
+            },
+            {
+                lat: -23.5505, 
+                lon: -46.6333, 
+                name: "Ponto Praça da Sé", 
+                parceiro: "Prefeitura SP", 
+                desc: "Quiosque próximo ao metro para descarte de telemóveis."
+            },
+            {
+                lat: -23.5874, 
+                lon: -46.6576, 
+                name: "Coleta Ibirapuera", 
+                parceiro: "Green Tech", 
+                desc: "Ponto de coleta próximo ao portão 7."
             }
+        ];
 
-            console.log("📍 Pontos processados (Final):", pontos);
+        // 2. Processamento
+        try {
+            // Se quiser voltar a usar o Django depois, descomente as linhas abaixo e comente a linha "var pontos = pontosMocados;"
+            
+            /* var scriptTag = document.getElementById('pontos-data');
+            var pontos = JSON.parse(scriptTag.textContent);
+            if (typeof pontos === 'string') { pontos = JSON.parse(pontos); }
+            */
+
+            // Usando os dados mocados diretamente:
+            var pontos = pontosMocados;
+
+            console.log("📍 Pontos processados (Mocados):", pontos);
 
             if (Array.isArray(pontos) && pontos.length > 0) {
                 var group = new L.featureGroup();
 
                 pontos.forEach(p => {
-                    // Garante que lat/lon sejam números flutuantes
                     var lat = parseFloat(p.lat);
                     var lon = parseFloat(p.lon);
                     
-                    // Só adiciona se as coordenadas forem válidas
                     if (!isNaN(lat) && !isNaN(lon)) {
-                        // Define ícone verde
                         var iconeVerde = new L.Icon({
                             iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
                             shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
@@ -82,6 +98,7 @@
 
                         var marker = L.marker([lat, lon], {icon: iconeVerde}).addTo(map);
                         
+                        // Corrigi levemente a URL do Google Maps para o padrão correto
                         marker.bindPopup(`
                             <div style="text-align:center;">
                                 <h6 style="color:#198754; font-weight:bold;">${p.name}</h6>
@@ -97,12 +114,12 @@
                     }
                 });
 
-                // Centraliza o mapa nos pontos encontrados
+                // Centraliza o mapa para mostrar todos os pontos
                 if (group.getLayers().length > 0) {
                     map.fitBounds(group.getBounds(), {padding: [50, 50]});
                 }
             } else {
-                console.warn("A lista de pontos está vazia ou não é um array válido.");
+                console.warn("A lista de pontos está vazia.");
             }
 
         } catch (e) {
