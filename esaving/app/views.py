@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login
-from django.db import models  # <--- ADICIONE ESSA LINHA AQUI
+from .models import PontoColeta
 import json
 
 # Importamos nossos Forms e Models
@@ -18,43 +18,60 @@ def quem_somos(request):
     return render(request, 'quem_somos.html')
 
 def mapa_pontos(request):
-    # Pega o termo de busca da URL (ex: /mapa/?q=centro)
-    query = request.GET.get('q')
+    query = request.GET.get('q', '').lower()
     
-    # Começa pegando todos os pontos ativos
-    pontos = PontoColeta.objects.all()
-    
-    # Se tiver busca, filtra por nome do local, endereço ou nome do parceiro
-    if query:
-        pontos = pontos.filter(
-            models.Q(nome_local__icontains=query) | 
-            models.Q(endereco_completo__icontains=query) |
-            models.Q(parceiro__nome_fantasia__icontains=query)
-        )
-    
-    # Serializa para o Mapa
+    # Busca todos os pontos
+    todos_pontos = PontoColeta.objects.all()
     pontos_list = []
-    for p in pontos:
-        pontos_list.append({
-            'name': p.nome_local,
-            'lat': p.latitude,
-            'lon': p.longitude,
-            'desc': p.endereco_completo,
-            'parceiro': p.parceiro.nome_fantasia
-        })
     
+    print(f"--- DEBUG: Total de pontos no banco: {todos_pontos.count()} ---") # Debug no terminal
+
+    for p in todos_pontos:
+        if not p.ativo:
+            continue
+            
+        # Tratamento de erro seguro para o Parceiro (caso o ID não exista ou seja nulo)
+        nome_parceiro = "Parceiro Desconhecido"
+        try:
+            if p.parceiro:
+                nome_parceiro = p.parceiro.nome_fantasia
+        except Exception as e:
+            print(f"Erro ao buscar parceiro do ponto {p.nome_local}: {e}")
+
+        # Filtros de busca
+        adicionar = True
+        if query:
+            nome = str(p.nome_local).lower()
+            end = str(p.endereco_completo).lower()
+            parc = str(nome_parceiro).lower()
+            
+            if (query not in nome) and (query not in end) and (query not in parc):
+                adicionar = False
+        
+        if adicionar:
+            pontos_list.append({
+                'name': p.nome_local,
+                'lat': p.latitude,
+                'lon': p.longitude,
+                'desc': p.endereco_completo,
+                'parceiro': nome_parceiro
+            })
+    
+    # Serializa para JSON
     pontos_json = json.dumps(pontos_list)
+    print(f"--- DEBUG: JSON enviado para o template: {pontos_json} ---") # Debug no terminal
     
     return render(request, 'pontos_coleta.html', {
         'pontos_json': pontos_json,
-        'query': query or '' # Devolve o termo para preencher o input
+        'query': query
     })
 
-# --- Lógica de Cadastro ---
+# --- Lógica de Cadastro de Usuários ---
 
 def register_cliente(request):
     if request.method == 'POST':
         user_form = UserRegisterForm(request.POST)
+        # request.FILES é obrigatório para receber a foto!
         profile_form = ClienteProfileForm(request.POST, request.FILES)
         
         if user_form.is_valid() and profile_form.is_valid():
@@ -66,7 +83,7 @@ def register_cliente(request):
             cliente.user = user
             cliente.save()
             
-            messages.success(request, 'Conta de Cliente criada com sucesso! Faça login.')
+            messages.success(request, 'Conta de Cliente criada! Faça login.')
             return redirect('login')
     else:
         user_form = UserRegisterForm()
@@ -102,12 +119,13 @@ def register_parceiro(request):
         'profile_form': profile_form
     })
 
-# --- Área Logada (Dashboard) ---
+# --- Área Logada e Gestão ---
 
 @login_required
 def dashboard(request):
     if hasattr(request.user, 'perfil_parceiro'):
         parceiro = request.user.perfil_parceiro
+        # Traz todos os pontos desse parceiro
         meus_pontos = parceiro.pontos_coleta.all()
         return render(request, 'area_parceiro.html', {
             'parceiro': parceiro, 
@@ -123,42 +141,88 @@ def dashboard(request):
 
 @login_required
 def cadastrar_ponto(request):
+    # Verifica se é parceiro
     if not hasattr(request.user, 'perfil_parceiro'):
-        messages.error(request, "Apenas parceiros podem cadastrar pontos.")
         return redirect('dashboard')
         
     if request.method == 'POST':
         form = PontoColetaForm(request.POST)
+        
+        # --- AQUI ESTÁ A MUDANÇA PARA DEBUG ---
         if form.is_valid():
-            ponto = form.save(commit=False)
-            ponto.parceiro = request.user.perfil_parceiro
-            ponto.save()
-            messages.success(request, 'Ponto de coleta adicionado!')
-            return redirect('dashboard')
+            try:
+                ponto = form.save(commit=False)
+                ponto.parceiro = request.user.perfil_parceiro
+                ponto.save()
+                messages.success(request, 'Ponto de coleta salvo com sucesso!')
+                return redirect('dashboard')
+            except Exception as e:
+                # Se der erro no banco (Djongo), mostra aqui
+                print(f"ERRO AO SALVAR NO BANCO: {e}")
+                messages.error(request, f"Erro de Banco de Dados: {e}")
+        else:
+            # Se o formulário for inválido (ex: vírgula em vez de ponto), mostra aqui
+            print("ERRO DE VALIDAÇÃO:", form.errors)
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"Erro no campo '{field}': {error}")
+        # --------------------------------------
+            
     else:
         form = PontoColetaForm()
         
     return render(request, 'cadastrar_ponto.html', {'form': form})
 
-# --- Gestão de Itens (Novo) ---
 
 @login_required
 def adicionar_item(request):
     if not hasattr(request.user, 'perfil_parceiro'):
         return redirect('dashboard')
+    
+    parceiro = request.user.perfil_parceiro
+    
+    # Validação inicial usando .first() (seguro para Djongo)
+    if not parceiro.pontos_coleta.first():
+        messages.warning(request, "Você precisa criar um Ponto de Coleta antes de registrar itens!")
+        return redirect('cadastrar_ponto')
 
     if request.method == 'POST':
         form = ItemForm(request.user, request.POST)
+        
         if form.is_valid():
-            item = form.save()
-            
-            ponto = item.ponto_coleta
-            if ponto:
+            try:
+                # 1. Recupera o ID do ponto selecionado no formulário
+                ponto_selecionado_id = form.cleaned_data['ponto_id']
+                
+                # 2. Busca o objeto PontoColeta manualmente
+                # Usamos .filter().first() que o Djongo entende bem
+                ponto = PontoColeta.objects.filter(id=ponto_selecionado_id, parceiro=parceiro).first()
+                
+                if not ponto:
+                    raise Exception("Ponto de coleta não encontrado.")
+
+                # 3. Prepara o item mas NÃO salva ainda (commit=False)
+                item = form.save(commit=False)
+                item.ponto_coleta = ponto  # Vincula o ponto manualmente
+                item.save()                # Agora salva no banco
+                
+                print(f"--- DEBUG: Item '{item.modelo}' salvo no ponto '{ponto.nome_local}' ---")
+                
+                # 4. Atualiza contadores
                 ponto.itens_coletados_total += 1
                 ponto.save()
                 
-            messages.success(request, f'Item "{item.modelo}" registrado com sucesso!')
-            return redirect('dashboard')
+                parceiro.pontos_acumulados += 10 
+                parceiro.save()
+                    
+                messages.success(request, f'Item "{item.modelo}" registrado com sucesso!')
+                return redirect('dashboard')
+                
+            except Exception as e:
+                print(f"❌ ERRO CRÍTICO: {e}")
+                messages.error(request, f"Erro ao processar: {e}")
+        else:
+            print("❌ ERRO DE VALIDAÇÃO:", form.errors)
     else:
         form = ItemForm(request.user)
     
@@ -168,18 +232,15 @@ def adicionar_item(request):
 def remover_item(request, item_id):
     try:
         item = Item.objects.get(pk=item_id)
-        # Verifica se o item pertence a este parceiro
         if item.ponto_coleta.parceiro.user == request.user:
             ponto = item.ponto_coleta
             item.delete()
-            
             if ponto.itens_coletados_total > 0:
                 ponto.itens_coletados_total -= 1
                 ponto.save()
-                
-            messages.success(request, 'Item removido do estoque.')
+            messages.success(request, 'Item removido.')
         else:
-            messages.error(request, 'Permissão negada.')
+            messages.error(request, 'Sem permissão.')
     except Item.DoesNotExist:
         messages.error(request, 'Item não encontrado.')
     

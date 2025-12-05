@@ -55,16 +55,22 @@ class PontoColetaForm(forms.ModelForm):
 
 # --- Cadastro de Item (Novo) ---
 class ItemForm(forms.ModelForm):
+    # Substituímos o campo automático por um ChoiceField simples
+    # Isso evita o erro de validação "SELECT 1" do Djongo
+    ponto_id = forms.ChoiceField(label='Local de Recebimento', required=True)
+
     class Meta:
         model = Item
-        fields = ['modelo', 'tipo', 'valor', 'ponto_coleta']
-        labels = {
-            'ponto_coleta': 'Local de Recebimento'
-        }
+        # Removemos 'ponto_coleta' daqui para gerenciar manualmente na view
+        fields = ['modelo', 'tipo', 'valor'] 
     
     def __init__(self, user, *args, **kwargs):
         super(ItemForm, self).__init__(*args, **kwargs)
-        # Filtra para mostrar apenas os pontos de coleta DESSE parceiro
+        
+        # Carrega as opções manualmente para o campo Select
         if hasattr(user, 'perfil_parceiro'):
-            self.fields['ponto_coleta'].queryset = user.perfil_parceiro.pontos_coleta.all()
+            pontos = user.perfil_parceiro.pontos_coleta.all()
+            # Cria a lista de tuplas (ID, Nome) para o formulário
+            opcoes = [(str(p.id), p.nome_local) for p in pontos]
+            self.fields['ponto_id'].choices = opcoes
             
